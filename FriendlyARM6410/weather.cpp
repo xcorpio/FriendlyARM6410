@@ -26,20 +26,38 @@ void Weather::getCityWeather(QString city)
 
 QString Weather::getWeatherString()
 {
-    if(!citys.contains("西安市")){
+    qDebug()<<QTextCodec::codecForUtfText("西安市")->name();
+    if(!citys.contains(QString::fromUtf8("西安市"))){
         return "无法获得 天气信息！";
     }
-    QString humidity = citys.value("西安市").value("humidity").toString();
-    //qDebug()<<humidity;
-    QString tmp = QString("西安市 %1, 最高气温 %2度，最低气温 %3度, 当前温度 %4度, %5, %6  %7, 湿度 百分之%8")
-            .arg(citys.value("西安市").value("stateDetailed").toString())
-            .arg(getSpeachNum(citys.value("西安市").value("tem1").toString().toInt()))
-            .arg(getSpeachNum(citys.value("西安市").value("tem2").toString().toInt()))
-            .arg(getSpeachNum(citys.value("西安市").value("temNow").toString().toInt()))
-            .arg(citys.value("西安市").value("windState").toString())
-            .arg(citys.value("西安市").value("windDir").toString())
-            .arg(citys.value("西安市").value("windPower").toString())
-            .arg(getSpeachNum(humidity.left(humidity.size()-1).toInt()));
+
+    //西安市 多云转阴, 最高气温 十6度，最低气温 2十5度, 当前温度 2十4度, 东北风小于3级, 东风  2级, 湿度 百分之5十6
+    QString humidity = citys.value(QString::fromUtf8("西安市")).value("humidity").toString();
+    QString stateDetailed = citys.value(QString::fromUtf8("西安市")).value("stateDetailed").toString();
+    QString windState = citys.value(QString::fromUtf8("西安市")).value("windState").toString();
+    QString windDir = citys.value(QString::fromUtf8("西安市")).value("windDir").toString();
+    QString windPower = citys.value(QString::fromUtf8("西安市")).value("windPower").toString();
+    int temH = citys.value(QString::fromUtf8("西安市")).value("tem2").toString().toInt();
+    int temL = citys.value(QString::fromUtf8("西安市")).value("tem1").toString().toInt();
+    if(temH < temL){
+        int t = temL;
+        temL = temH;
+        temH = t;
+    }
+    QString tmp = QString("西安市 ");
+    tmp.append(stateDetailed.toUtf8()).append("，最高温度 ")
+            .append(getSpeachNum(temH))
+            .append("度,最低温度 ")
+            .append(getSpeachNum(temL))
+            .append("度，当前温度 ")
+            .append(getSpeachNum(citys.value(QString::fromUtf8("西安市")).value("temNow").toString().toInt()))
+            .append("度，")
+            .append(windState.toUtf8())
+            .append(", ")
+            .append(windDir.toUtf8())
+            .append(windPower.toUtf8())
+            .append(", 湿度 百分之")
+            .append(getSpeachNum(humidity.left(humidity.size()-1).toInt()));
     return tmp;
 }
 
@@ -81,7 +99,6 @@ QString Weather::getSpeachNum(int num)
 void Weather::replyFinished(QNetworkReply *reply)
 {
     QXmlStreamReader reader;
-    //设置文件，这时会将流设为初始状态
     reader.setDevice(reply);
     //如果没有读到文件的结尾，且没有出现错误
     while (! reader.atEnd()) {
@@ -113,9 +130,9 @@ void Weather::replyFinished(QNetworkReply *reply)
     }
 
     emit dataUpdate();                  //发送更新信号
-    QString res =QString("speak -vzh+f3 -p 80 '").append(getWeatherString()).append("'");
-    qDebug()<<res;
-    ::system(res.toUtf8());
+    QString res =QString("speak -vzh+f3 -p 80 -s 150 '").append(getWeatherString()).append("'");
+    qDebug()<<res.toUtf8();
+    ::system(res.toLatin1());
     reply->deleteLater();
 }
 

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "weather.h"
 
 namespace Ui {
 class MainWindow;
@@ -28,8 +29,13 @@ private slots:
 
     void on_pushButton_3_clicked();
 
+    void on_pushButton_4_clicked();
+
+    void on_pushButton_5_clicked();
+
 private:
     Ui::MainWindow *ui;
+    Weather * weather;
 };
 
 #endif // MAINWINDOW_H

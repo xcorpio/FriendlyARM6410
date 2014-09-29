@@ -2,12 +2,16 @@
 #include "ui_mainwindow.h"
 #include "leds.h"
 #include "stdlib.h"
+#include <QTextCodec>
+#include <QDebug>
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    weather = new Weather(this);
 }
 
 MainWindow::~MainWindow()
@@ -58,5 +62,17 @@ void MainWindow::on_pushButton_clicked()
 
 void MainWindow::on_pushButton_3_clicked()
 {
+    qDebug()<<QTextCodec::codecForUtfText("speak -vzh '今天是晴天！'")->name();
     ::system("speak -vzh '今天是晴天！'");
+}
+
+void MainWindow::on_pushButton_4_clicked()
+{
+    weather->getCityWeather("xian");
+}
+
+void MainWindow::on_pushButton_5_clicked()
+{
+    qDebug()<<QTextCodec::codecForLocale()->name();
+    qDebug()<<QTextCodec::availableCodecs();
 }
