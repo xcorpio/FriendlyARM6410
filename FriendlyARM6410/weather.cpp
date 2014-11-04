@@ -1,12 +1,12 @@
 #include "weather.h"
-
+#include "speakthread.h"
 #include <QFile>
 #include <QXmlStreamReader>
 #include <QDebug>
 #include <QtNetwork>
 
-Weather::Weather(QObject *parent) :
-    QThread(parent)
+
+Weather::Weather(QObject* parent):QObject(parent = 0)
 {
     manager = new QNetworkAccessManager(this);
     connect(manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(replyFinished(QNetworkReply*)));
@@ -68,9 +68,15 @@ QString Weather::getSpeachNum(int num)
     if(num > 0){
         if(num>10){
             if(num>19){
-                ret.append(QString::number(num/10)).append("十").append(QString::number(num%10));
+                ret.append(QString::number(num/10)).append("十");
+                if(num%10 != 0){
+                    ret.append(QString::number(num%10));
+                }
             }else{
-                ret.append("十").append(QString::number(num%10));
+                ret.append("十");
+                if(num%10 != 0){
+                    ret.append(QString::number(num%10));
+                }
             }
         }else if(num < 10){
             ret = QString(num);
@@ -80,9 +86,15 @@ QString Weather::getSpeachNum(int num)
     }else if(num < 0){
         if(num < -10){
             if(num < -19){
-               ret.append("零下").append(QString::number(num/-10)).append("十").append(QString::number(num%-10));
+               ret.append("零下").append(QString::number(num/-10)).append("十");
+               if(num%10 != 0){
+                   ret.append(QString::number(num%10));
+               }
             }else{
-                ret.append("零下").append("十").append(QString::number(num%-10));
+                ret.append("零下").append("十");
+                if(num%10 != 0){
+                    ret.append(QString::number(num%10));
+                }
             }
         }if(num > -10){
             ret.append("零下").append(QString::number(num%-10));
@@ -94,6 +106,13 @@ QString Weather::getSpeachNum(int num)
     }
     qDebug()<<num<<" to "<<ret;
     return ret;
+}
+
+void Weather::speakWeather()
+{
+    SpeakThread* thread = new SpeakThread(getWeatherString());
+    connect(thread,SIGNAL(finished()),thread,SLOT(deleteLater()));
+    thread->start();
 }
 
 void Weather::replyFinished(QNetworkReply *reply)
@@ -129,17 +148,9 @@ void Weather::replyFinished(QNetworkReply *reply)
         qDebug()<<"error:"<<reader.errorString();
     }
 
-    emit dataUpdate();                  //发送更新信号
-    QString res =QString("speak -vzh+f3 -p 80 -s 150 '").append(getWeatherString()).append("'");
-    qDebug()<<res.toUtf8();
-    ::system(res.toLatin1());
+    emit dataUpdate();                  //发送天气更新信号
     reply->deleteLater();
 }
 
-void Weather::run()
-{
-    //可用于更新数据
-    while (1) {
 
-    }
-}
+
