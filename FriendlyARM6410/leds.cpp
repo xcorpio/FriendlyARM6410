@@ -22,3 +22,19 @@ void Leds::setLedState(int ledID, int ledState)
 {
     ioctl(m_fd,ledState,ledID);
 }
+
+void Leds::turnAllOn()
+{
+    ioctl(m_fd,1,0);
+    ioctl(m_fd,1,1);
+    ioctl(m_fd,1,2);
+    ioctl(m_fd,1,3);
+}
+
+void Leds::turnAllOff()
+{
+    ioctl(m_fd,0,0);
+    ioctl(m_fd,0,1);
+    ioctl(m_fd,0,2);
+    ioctl(m_fd,0,3);
+}

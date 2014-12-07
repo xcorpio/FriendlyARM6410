@@ -19,7 +19,9 @@ SOURCES += main.cpp\
     speakthread.cpp \
     buttons.cpp \
     pwm.cpp \
-    vncserver.cpp
+    vncserver.cpp \
+    remotecamera.cpp \
+    convert.cpp
 
 HEADERS  += mainwindow.h \
     leds.h \
@@ -27,7 +29,10 @@ HEADERS  += mainwindow.h \
     speakthread.h \
     buttons.h \
     pwm.h \
-    vncserver.h
+    vncserver.h \
+    convert.h \
+    lcd.h \
+    remotecamera.h
 
 FORMS    += mainwindow.ui
 
@@ -47,7 +52,7 @@ linux-g++ {
 linux-arm-g++ {
     message(arm-linux)
     DEFINES += ARM_LINUX
-    INCLUDEPATH += /opt/FriendlyARM/xcorpio/libvncserver-0.9.10/_install/include
+    INCLUDEPATH += /opt/FriendlyARM/xcorpio/libvncserver-0.9.10/_install/include /opt/FriendlyARM/xcorpio/libwebsockets/build_arm/lib/Headers
     LIBS += -L/opt/FriendlyARM/xcorpio/libvncserver-0.9.10/_install/lib -lvncserver  -lturbojpeg -ljpeg \
-                -lcrypt -lcrypto -lssl -lresolv
+                -lcrypt -lcrypto -lssl -lresolv -L/opt/FriendlyARM/xcorpio/libwebsockets/build_arm/lib -lwebsockets
 }

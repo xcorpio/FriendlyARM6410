@@ -2,9 +2,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QProcess>
 #include "weather.h"
 #include "pwm.h"
 #include "vncserver.h"
+#include "remotecamera.h"
 
 
 namespace Ui {
@@ -50,11 +52,25 @@ private slots:
 
     void on_pushButton_7_clicked();
 
+    void on_pushButton_8_clicked();
+
+    void on_pushButton_9_clicked();
+
+    void on_pushButton_10_clicked();
+
+    void on_pushButton_11_clicked();
+
+    void on_pushButton_12_clicked();
+
+    void on_tabWidget_currentChanged(int index);
+
 public slots:
     void weatherUpdate();
     void getCityWeather();
     void updateTime();
     void dealButtons(bool* on);
+    void parseSpeech();
+    void processError(QProcess::ProcessError error);
 
 private:
     Ui::MainWindow *ui;
@@ -64,6 +80,8 @@ private:
     Weather * weather;
     PWM* pwm;
     VNCServer* vncServer;
+    QProcess* srProcess;
+    RemoteCamera* rCamera;
 };
 
 #endif // MAINWINDOW_H

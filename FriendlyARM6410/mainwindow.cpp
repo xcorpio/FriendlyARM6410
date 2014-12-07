@@ -30,14 +30,14 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     wday[0]="Sun";wday[1]="Mon";wday[2]="Tue";
     wday[3]="Wed";wday[4]="Thu";wday[5]="Fri";wday[6]="Sat";
 
-//    weather = new Weather(this);
-//    connect(weather,SIGNAL(dataUpdate()),this,SLOT(weatherUpdate()));
+    weather = new Weather(this);
+    connect(weather,SIGNAL(dataUpdate()),this,SLOT(weatherUpdate()));
 
-//    //定时器，每隔一段时间更新天气信息
-//    QTimer* updateWeatherTimer = new QTimer(this);
-//    connect(updateWeatherTimer,SIGNAL(timeout()),this,SLOT(getCityWeather()));
-//    updateWeatherTimer->start(1200000);
-//    this->getCityWeather();
+    //定时器，每隔一段时间更新天气信息
+    QTimer* updateWeatherTimer = new QTimer(this);
+    connect(updateWeatherTimer,SIGNAL(timeout()),this,SLOT(getCityWeather()));
+    updateWeatherTimer->start(1200000);
+    this->getCityWeather();
 
     //更新时间
     QTimer* timeTimer = new QTimer(this);
@@ -45,7 +45,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     timeTimer->start(1000);
 
     //界面显示
-    //this->setWindowState(Qt::WindowFullScreen);
+    this->setWindowState(Qt::WindowFullScreen);
     this->setWindowTitle("xcorpio");
     ui->comboBox->insertItems(0,QStyleFactory::keys());
     ui->comboBox->setCurrentIndex(ui->comboBox->count()-1); //设置为最后一个样式
@@ -60,6 +60,14 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
     //VNCServer
     vncServer = new VNCServer(this->argc,this->argv,this);
 
+    //语音识别
+    srProcess = new QProcess(this);
+    srProcess->setReadChannel(QProcess::StandardOutput);
+    connect(srProcess,SIGNAL(readyReadStandardOutput()),this,SLOT(parseSpeech()));
+    connect(srProcess,SIGNAL(error(QProcess::ProcessError)),this,SLOT(processError(QProcess::ProcessError)));
+
+    //远程摄像头
+    rCamera = new RemoteCamera(this);
 }
 
 MainWindow::~MainWindow()
@@ -70,6 +78,12 @@ MainWindow::~MainWindow()
         vncServer->quit();
         vncServer->wait(1000);
     }
+    if(srProcess->state() != QProcess::NotRunning){
+        srProcess->close();
+        srProcess->waitForFinished(1000);
+    }
+    rCamera->closeCamera();
+    rCamera->wait(1000);
 }
 
 void MainWindow::on_checkBox_led1_stateChanged(int arg1)
@@ -217,6 +231,56 @@ void MainWindow::dealButtons(bool *on)
     }
 }
 
+void MainWindow::parseSpeech()
+{
+    char buf[1024];
+    int ret;
+    while((ret = srProcess->readLine(buf, sizeof(buf))) != -1 && ret != 0) {
+        QString tmp(buf);
+        if(tmp.startsWith("sentence1: <s>")){
+            tmp = tmp.section(" <s> ",1,1).section(" </s>",0,0);
+            qDebug()<<""<<tmp;
+            if(QString::compare(tmp,"TURN LIGHT ON",Qt::CaseInsensitive) == 0){
+                qDebug()<<"command : "<<"TURN LIGHT ON";
+                Leds::turnAllOn();
+            }else if(QString::compare(tmp,"TURN LIGHT OFF",Qt::CaseInsensitive) == 0){
+                qDebug()<<"command : "<<"TURN LIGHT OFF";
+                Leds::turnAllOff();
+            }else if(QString::compare(tmp,"REPORT WEATHER",Qt::CaseInsensitive) == 0){
+                qDebug()<<"command : "<<"REPORT WEATHER";
+                weather->speakWeather();
+            }else if(QString::compare(tmp,"PLAY MUSIC",Qt::CaseInsensitive) == 0){
+                qDebug()<<"command : "<<"PLAY MUSIC";
+
+            }
+        }
+    }
+}
+
+void MainWindow::processError(QProcess::ProcessError error)
+{
+    switch (error) {
+    case QProcess::FailedToStart:
+        qDebug()<<"QProcess::FailedToStart";
+        break;
+    case QProcess::Crashed:
+        qDebug()<<"QProcess::Crashed";
+        break;
+    case QProcess::Timedout:
+        qDebug()<<"QProcess::Timedout";
+        break;
+    case QProcess::WriteError:
+        qDebug()<<"QProcess::WriteError";
+        break;
+    case QProcess::ReadError:
+        qDebug()<<"QProcess::ReadError";
+        break;
+    default:
+        qDebug()<<"QProcess::UnknownError";
+        break;
+    }
+}
+
 void MainWindow::on_pushButton_6_clicked()
 {
     exit(0);
@@ -259,5 +323,46 @@ void MainWindow::on_pushButton_7_clicked()
 {
     if(!vncServer->isRunning()){
         vncServer->start();
+    }
+}
+
+void MainWindow::on_pushButton_8_clicked()
+{
+    this->vncServer->stopServer();
+}
+
+void MainWindow::on_pushButton_9_clicked()
+{
+    if(srProcess->state() == QProcess::NotRunning){
+        QString program = "julius";
+        QStringList arguments;
+        arguments<<"-C"<<"friend.jconf";
+        srProcess->start(program,arguments);
+    }
+}
+
+void MainWindow::on_pushButton_10_clicked()
+{
+    if(srProcess->state() != QProcess::NotRunning){
+        srProcess->close();
+    }
+}
+
+void MainWindow::on_pushButton_11_clicked()
+{
+    rCamera->openCamera();
+}
+
+void MainWindow::on_pushButton_12_clicked()
+{
+    rCamera->closeCamera();
+}
+
+void MainWindow::on_tabWidget_currentChanged(int index)
+{
+    if(index != 3){
+        rCamera->stopPreview();
+    }else if(index == 3 && rCamera->isRunning()){
+        rCamera->restorePreview();
     }
 }

@@ -19,7 +19,8 @@ signals:
 
 
 public slots:
-
+    static void turnAllOn();
+    static void turnAllOff();
 };
 
 #endif // LEDS_H
